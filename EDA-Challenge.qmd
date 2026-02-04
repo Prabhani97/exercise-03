@@ -1,0 +1,48 @@
+---
+title: "Exercise 03: Explore and Wrangle Data"
+format: html
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## Setup
+
+tidyverse library for data import and wrangling.
+
+```{r}
+library(tidyverse)
+```
+
+## Loading the dataset and inspecting variables
+
+From the provided URL we can first load the data set into the object called "d".
+
+```{r}
+f<- "https://raw.githubusercontent.com/difiore/ada-datasets/main/data-wrangling.csv"
+d<- read_csv(f, col_names = TRUE)
+
+```
+
+We can take a quick lookat the data we loaded and variables in it.
+
+```{r}
+head(d)
+dim(d)
+str(d)
+
+#Listing variable names
+
+names(d)
+```
+
+## Step 1
+
+#### Creating new variables
+
+1.  **BSD** (body size dimorphism) - Ratio of average male to female body mass.
+
+2.  **sex_ratio** - Ratio of the number of adult females to adult males in a typical group.
+
+3.  **DI** (for “defensibility index”) - Ratio of day range length to the diameter of the home range.
