@@ -25,12 +25,15 @@ d<- read_csv(f, col_names = TRUE)
 
 ```
 
-We can take a quick lookat the data we loaded and variables in it.
+We can take a quick look at the data we loaded and variables in it.
 
 ```{r}
 head(d)
 dim(d)
 str(d)
+glimpse(d)
+types <- identify_variable_types(d)
+
 
 #Listing variable names
 
@@ -41,8 +44,103 @@ names(d)
 
 #### Creating new variables
 
-1.  **BSD** (body size dimorphism) - Ratio of average male to female body mass.
+#### **1) BSD** (body size dimorphism) - Ratio of average male to female body mass.
 
-2.  **sex_ratio** - Ratio of the number of adult females to adult males in a typical group.
+#### **2) sex_ratio** - Ratio of the number of adult females to adult males in a typical group.
 
-3.  **DI** (for “defensibility index”) - Ratio of day range length to the diameter of the home range.
+#### **3) DI** (for “defensibility index”) - Ratio of day range length to the diameter of the home range.
+
+```{r}
+#BSD (body size dimorphism) - Ratio of average male to female body mass
+
+d$BSD<-d$Body_mass_male_mean/d$Body_mass_female_mean
+d$BSD
+
+#sex_ratio - Ratio of the number of adult females to adult males in a typical group
+
+d$sex_ratio<-d$AdultFemale/d$AdultMales
+d$sex_ratio
+
+
+```
+
+We need a calculation here, to get the diameter of the home range to be derived from HomeRange_km2 in order to get the new variable "DI-defensibility index"
+
+```{r}
+d$HomeRange_diameter <- 2 * sqrt(d$HomeRange_km2 / pi)
+d$HomeRange_diameter
+
+#DI (for “defensibility index”) - Ratio of day range length to the diameter of the home range
+
+d$DI <- d$DayLength_km/d$HomeRange_diameter
+d$DI
+```
+
+Since a division is included we must make sure that the rows where the relavant denominator is zero the new variable is INF. To check this,
+
+```{r}
+which(is.infinite(d$BSD)) # Checking whether denominator zeros have given any INF
+which(is.infinite(d$sex_ratio))
+which(is.infinite(d$DI))
+```
+
+There is no any instances as INF.
+
+#### 4) Relationship between day range length and time spent moving
+
+First trying out **ggplot2** to visualize this relationship.
+
+The reason for choosing **ggplot2** for this plot is we can use faceting by family to generate one plot per family. So our comparison will be easy.Using a scatterplot because both are continuous variables,
+
+Explaining the layers and inside parameters used : aesthetics layer - Mapping given variables to x and y axis, to customize the plot..geometry layer - 0.5 opacity points, color=black, size=4 and a smooth line to show where all points are lying generally. Using labs() to set the x- and y-axis labels.
+
+```{r}
+library(ggplot2)
+
+# Overall plot (all species)
+
+ggplot(d, aes(x = Move, y = DayLength_km)) +
+  geom_point(alpha=0.5,color="black",size=4, na.rm = TRUE) + geom_smooth(method = lm)+labs(x="Tiem spent moving", y="Day range length")
+```
+
+Should we use log values to plot? How to decide??
+
+#### By family comparison
+
+1\) Approach 1: First using the color aesthetic to show different families.
+
+```{r}
+library(ggplot2)
+
+# plot all species in one plotwith dfferent color for each
+
+ggplot(d, aes(x = log(Move), y = log(DayLength_km), color=Family)) +
+  geom_point(alpha=0.5, na.rm = TRUE)+labs(x="Tiem spent moving", y="Day range length")
+```
+
+2\) Approach 2- Now, we are using facet_wrap() layer in ggplot2 to visualize families in a separate plot
+
+```{r}
+ggplot(d, aes(x = Move, y = DayLength_km,color = factor(Family))) +
+  geom_point(na.rm = TRUE)  +
+  facet_wrap(~ Family)+labs(
+    x = "Time spent moving",
+    y = "Day range length (km)"
+  )+labs(x="Tiem spent moving", y="Day range length")
+```
+
+#### 5) relationship between day range length and group size 
+
+```{r}
+# Overall plot (all species)
+ggplot(d, aes(x = MeanGroupSize, y = DayLength_km, Family= disp)) +
+  geom_point(na.rm = TRUE) +
+  geom_smooth(method = "lm", se = FALSE, na.rm = TRUE)
+```
+
+```{r}
+ggplot(d, aes(x = MeanGroupSize, y = DayLength_km,color = factor(Family))) +
+  geom_point(na.rm = TRUE) +
+  geom_smooth(method = "lm", se = FALSE, na.rm = TRUE) +
+  facet_wrap(~ Family)
+```
