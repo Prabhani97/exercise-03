@@ -31,8 +31,9 @@ We can take a quick look at the data we loaded and variables in it.
 head(d)
 dim(d)
 str(d)
-glimpse(d)
-types <- identify_variable_types(d)
+
+# Get the class of each column
+sapply(d, class)
 
 
 #Listing variable names
@@ -105,42 +106,121 @@ ggplot(d, aes(x = Move, y = DayLength_km)) +
 
 Should we use log values to plot? How to decide??
 
+Since the values seems to be more towards a corner , let's use log values to plot
+
+```{r}
+# Overall plot (all species)
+
+ggplot(d, aes(x =log(Move), y = log(DayLength_km))) +
+  geom_point(alpha=0.5,color="black",size=4, na.rm = TRUE) + geom_smooth(method = lm)+labs(x="Tiem spent moving", y="Day range length")
+
+```
+
 #### By family comparison
 
-1\) Approach 1: First using the color aesthetic to show different families.
+1\) Approach 1: First using the color aesthetic inside geom_point() to show different families.Defining it inside the geometry layer does not affect other layers.
 
 ```{r}
 library(ggplot2)
 
 # plot all species in one plotwith dfferent color for each
 
-ggplot(d, aes(x = log(Move), y = log(DayLength_km), color=Family)) +
-  geom_point(alpha=0.5, na.rm = TRUE)+labs(x="Tiem spent moving", y="Day range length")
+ggplot(d, aes(x = log(Move), y = log(DayLength_km))) +
+  geom_point(alpha=0.5, aes(color=Family),na.rm = TRUE)+geom_smooth(method=lm)+labs(x="Tiem spent moving", y="Day range length")
 ```
 
 2\) Approach 2- Now, we are using facet_wrap() layer in ggplot2 to visualize families in a separate plot
 
 ```{r}
-ggplot(d, aes(x = Move, y = DayLength_km,color = factor(Family))) +
-  geom_point(na.rm = TRUE)  +
+ggplot(d, aes(x = Move, y = DayLength_km)) +
+  geom_point(aes(color = Family), na.rm = TRUE)  +
   facet_wrap(~ Family)+labs(
     x = "Time spent moving",
     y = "Day range length (km)"
   )+labs(x="Tiem spent moving", y="Day range length")
 ```
 
+Do species that spend more time moving travel farther overall? How about within any particular primate family?
+
+Should you transform either of these variables? Why or why not?
+
+Should we use log values to plot? How to decide??
+
+Since the values seems to be more towards a corner , let's use log values to plot
+
 #### 5) relationship between day range length and group size 
 
 ```{r}
 # Overall plot (all species)
-ggplot(d, aes(x = MeanGroupSize, y = DayLength_km, Family= disp)) +
+ggplot(d, aes(x = MeanGroupSize, y = DayLength_km)) +
   geom_point(na.rm = TRUE) +
   geom_smooth(method = "lm", se = FALSE, na.rm = TRUE)
 ```
 
 ```{r}
-ggplot(d, aes(x = MeanGroupSize, y = DayLength_km,color = factor(Family))) +
-  geom_point(na.rm = TRUE) +
-  geom_smooth(method = "lm", se = FALSE, na.rm = TRUE) +
+ggplot(d, aes(x = MeanGroupSize, y = DayLength_km)) +
+  geom_point(aes(color = Family),na.rm = TRUE)  +
   facet_wrap(~ Family)
 ```
+
+Do species that live in larger groups travel farther, overall, in a day? How about within any particular primate family? Should you transform either of these variables?
+
+#### 6) relationship between canine size dimorphism (y axis) and body size dimorphism (x axis)
+
+```{r}
+# Overall plot (all species)
+ggplot(d, aes(x = BSD, y = Canine_Dimorphism)) +
+  geom_point(na.rm = TRUE) +
+  geom_smooth(method = "lm", se = FALSE, na.rm = TRUE)
+```
+
+```{r}
+ggplot(d, aes(x = BSD, y = Canine_Dimorphism)) +
+  geom_point(aes(color = Family),na.rm = TRUE)  +
+  facet_wrap(~ Family)
+```
+
+Do taxa with greater size dimorphism also show greater canine dimorphism?
+
+#### 7) Create a new variable named **diet_strategy** that is “frugivore” if fruits make up \>50% of the diet, “folivore” if leaves make up \>50% of the diet, and “omnivore” if diet data are available but neither of these is true (i.e., these values are not `NA`). Then, create boxplots of group size for species with different dietary strategies, omitting the category `NA` from your plot. Do frugivores live in larger groups than folivores?
+
+```{r}
+# Creating a new variable named "diet_strategy"
+
+
+
+d1<-mutate(d, diet_strategy = ifelse(Fruit >= 50, "frugivore", ifelse(Leaves >= 50, "folivore",
+    ifelse(Fruit < 50 & Leaves < 50 & !is.na(Fruit) & !is.na(Leaves), "omnivore", NA))))
+
+
+
+d1$diet_strategy
+```
+
+```{r}
+
+
+# we need to remove the rows from the dataset where the diet_strategy is N/A for this
+# Using subsetting
+
+d2 <- d1[!is.na(d1$diet_strategy), ]
+
+d2
+
+```
+
+```{r}
+# Creating boxplots of group size for species with different dietary strategies
+# diet_strategy should be the x axis.
+
+
+ggplot(data = d2, aes(x = diet_strategy, y = MeanGroupSize))+ 
+  geom_boxplot(na.rm = TRUE) + 
+  theme(axis.text.x = element_text(angle = 90))+ 
+  labs(x= "diet_strategy", y="Group Size (MeanGroupSize)")
+
+
+
+```
+
+Do frugivores live in larger groups than folivores?
