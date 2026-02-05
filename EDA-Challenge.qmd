@@ -108,14 +108,14 @@ library(ggplot2)
 
 p<-ggplot(d, aes(x = Move, y = DayLength_km))
 p<-p+ geom_point(alpha=0.5,color="black",size=4, na.rm = TRUE)
-p<-p+ geom_smooth(method = lm, se = FALSE)
+p<-p+ geom_smooth(method = "lm", se = FALSE, na.em=TRUE)
 p<-p+labs(x="Time spent moving", y="Day range length")
 p
 ```
 
 **Should we transform values?**
 
-The above plotted values seems to be skewed to right. Therefore, we can use log values of the variables for the plot. If we convert the values to log values, the minus(-) values for day range length variable will indicate the values between 0 and 1.
+The above plotted values seems to be skewed to a certain direction of the plot. Therefore, we can use log values of the variables for the plot. If we convert the values to log values, the minus(-) values for day range length variable will indicate the values between 0 and 1.
 
 ```{r}
 # Overall plot (representing all species) - Now using log() values
@@ -123,7 +123,7 @@ The above plotted values seems to be skewed to right. Therefore, we can use log 
 d<-d[ is.finite(log(d$Move)) & is.finite(log(d$DayLength_km)), ] # Removing invalid values after log convrersion
 p<-ggplot(d, aes(x = log(Move), y = log(DayLength_km)))
 p<-p+ geom_point(alpha=0.5,color="black",size=4, na.rm = TRUE)
-p<-p+ geom_smooth(method = lm, se = FALSE)
+p<-p+ geom_smooth(method = lm, se = FALSE,na.em=TRUE)
 p<-p+labs(x="log(Time spent moving)", y="log(Day range length)")
 p
 ```
@@ -139,7 +139,7 @@ p
 d<-d[ is.finite(log(d$Move)) & is.finite(log(d$DayLength_km)), ] # Removing invalid values after log convrersion
 p<-ggplot(d, aes(x = log(Move), y = log(DayLength_km)))
 p<-p+ geom_point(alpha=0.5,aes(color=Family),size=4, na.rm = TRUE)
-p<-p+ geom_smooth(method = lm, se = FALSE)
+p<-p+ geom_smooth(method = lm, se = FALSE,na.em=TRUE)
 p<-p+labs(x="log(Time spent moving)", y="log(Day range length)")
 p
 ```
@@ -151,8 +151,8 @@ p
 
 d<-d[ is.finite(log(d$Move)) & is.finite(log(d$DayLength_km)), ] # Removing invalid values after log convrersion
 p<-ggplot(d, aes(x = log(Move), y = log(DayLength_km)))
-p<-p+ geom_point(alpha=0.5,aes(color=Family),size=2, na.rm = TRUE)
-p<-p+ geom_smooth(method = lm, se = FALSE)
+p<-p+ geom_point(alpha=0.5,aes(color=factor(Family)),size=2, na.rm = TRUE)
+p<-p+ geom_smooth(method = lm, se = FALSE,na.em=TRUE)
 p<-p+ facet_wrap(~ Family)
 p<-p+labs(x="log(Time spent moving)", y="log(Day range length)")
 p
@@ -164,11 +164,11 @@ This approach is good for identifying patterns separate for each family.
 
 -   Looking at above plots, we can say that the relationship between x and y variables are not very strong. But, considering overall the slope of the line upwards tell us that species spend more time moving likely to have longer day range lengths.
 
--   Above overall conclusion varies slightly if we consider families separately. Cercopithecidae and Atelidae show a considerable good positive relationship, from which we can tell that the species spend more time moving generally travel farther within a day.
+-   Above overall conclusion varies slightly if we consider families separately. Atelidae family show a considerable good positive relationship, from which we can tell that the species spend more time moving generally travel farther within a day.
 
 -   Cebidae and Hylobatidae also show a positive trend, but we cannot say exactly it is a positive relationship because they have very small sample sizes. similar observation with Indriidae.
 
--   Lemuridae shows a flat relationship while only Hominidae shows a negative relationship which tells us that the time they spent moving is less allocated to move farther away or the time they spent moving is not necessarily for travelling farther away respectively.
+-   Cercopithecidae and and Lemuridae shows a flat relationship while only Hominidae shows a negative relationship which tells us that the time they spent moving is less allocated to move farther away or the time they spent moving is not necessarily for travelling farther away respectively.
 
 #### 5) Plotting the relationship between day range length and group size
 
@@ -180,7 +180,7 @@ Applying same considerations applied for above plot. We can transform these vari
 d<-d[ is.finite(log(d$MeanGroupSize)) & is.finite(log(d$DayLength_km)), ] # Removing invalid values after log convrersion
 p<-ggplot(d, aes(x = log(MeanGroupSize), y = log(DayLength_km)))
 p<-p+ geom_point(alpha=0.5,color="black",size=4, na.rm = TRUE)
-p<-p+ geom_smooth(method = lm, se = FALSE)
+p<-p+ geom_smooth(method = lm, se = FALSE,na.em=TRUE)
 p<-p+labs(x="log(Mean Group Size)", y="log(Day range length)")
 p
 ```
@@ -191,8 +191,8 @@ p
 
 d<-d[ is.finite(log(d$MeanGroupSize)) & is.finite(log(d$DayLength_km)), ] # Removing invalid values after log convrersion
 p<-ggplot(d, aes(x = log(MeanGroupSize), y = log(DayLength_km)))
-p<-p+ geom_point(alpha=0.5,aes(color=Family),size=2, na.rm = TRUE)
-p<-p+ geom_smooth(method = lm, se = FALSE)
+p<-p+ geom_point(alpha=0.5,aes(color=factor(Family)),size=2, na.rm = TRUE)
+p<-p+ geom_smooth(method = lm, se = FALSE,na.em=TRUE)
 p<-p+ facet_wrap(~ Family)
 p<-p+labs(x="log(Mean Group Size)", y="log(Day range length)")
 p
@@ -223,7 +223,7 @@ unique(d$Species)
 d<-d[ is.finite(log(d$BSD)) & is.finite(log(d$Canine_Dimorphism)), ] # Removing invalid values after log convrersion
 p<-ggplot(d, aes(x = log(BSD), y = log(Canine_Dimorphism)))
 p<-p+ geom_point(alpha=0.5,color="black",size=4, na.rm = TRUE)
-p<-p+ geom_smooth(method = lm, se = FALSE)
+p<-p+ geom_smooth(method = lm, se = FALSE,na.em=TRUE)
 p<-p+labs(x="log(body size dimorphism)", y="log(canine size dimorphism)")
 p
 ```
@@ -233,8 +233,8 @@ p
 
 d<-d[ is.finite(log(d$ BSD)) & is.finite(log(d$Canine_Dimorphism)), ] # Removing invalid values after log convrersion
 p<-ggplot(d, aes(x = log(BSD), y = log(Canine_Dimorphism)))
-p<-p+ geom_point(alpha=0.5,aes(color=Family),size=2, na.rm = TRUE)
-p<-p+ geom_smooth(method = lm, se = FALSE)
+p<-p+ geom_point(alpha=0.5,aes(color=factor(Family)),size=2, na.rm = TRUE)
+p<-p+ geom_smooth(method = lm, se = FALSE,na.em=TRUE)
 p<-p+ facet_wrap(~ Family)
 p<-p+labs(x="log(BSD)", y="log(Canine_Dimorphism)")
 p
@@ -296,3 +296,28 @@ p
 **Do frugivores live in larger groups than folivores?**
 
 Looking at the median lines of the boxplots of two categories, folivores have a slightly higher median line. This tells us that on average, folivore species live in somewhat larger groups than frugivores. But, the plot also tells us that frugivores have some very large group sized species as well because of the strong upper outliers. The largest group size of folivores are not that high as frugivores. We can also tell that the variability of group sizes in frugivores us higher then folivores too looking at the boxes.
+
+**Question 8**
+
+1\) using mutate() to add a variable, Binomial to the data frame d, which is a concatenation of the Genus and Species variables
+
+2\) Using select() to trim the data frame to only include the variables Binomial, Family, Brain_size_species_mean, and Body_mass_male_mean
+
+3\) Using group_by() to group above variables by Family
+
+4\) Using summarise() to calculate the average value for Brain_Size_Species_Mean and Body_mass_male_mean per Family
+
+5\) using arrange() to arrange by *increasing* average brain size
+
+```{r}
+d1<-d %>%
+  mutate(Binomial = paste(Genus, Species)) %>%
+  select(Binomial, Family, Brain_Size_Species_Mean, Body_mass_male_mean) %>%
+  group_by(Family) %>%
+  summarise(
+    mean_brain = mean(Brain_Size_Species_Mean, na.rm = TRUE),
+    mean_body  = mean(Body_mass_male_mean, na.rm = TRUE)
+  ) %>%
+  arrange(mean_brain)
+d1
+```
