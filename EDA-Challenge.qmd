@@ -7,15 +7,15 @@ execute:
   message: false
 ---
 
-## Setup
+#### Setup
 
-tidyverse library for data import and wrangling.
+We can use tidyverse library for data import and wrangling.
 
 ```{r}
 library(tidyverse)
 ```
 
-## Loading the dataset and inspecting variables
+#### Loading the dataset and inspecting variables
 
 From the provided URL we can first load the data set into the object called "d".
 
@@ -29,11 +29,9 @@ We can take a quick look at the data we loaded and variables in it.
 
 ```{r}
 head(d)
+tail(d)
 dim(d)
 str(d)
-
-# Get the class of each column
-sapply(d, class)
 
 
 #Listing variable names
@@ -41,15 +39,15 @@ sapply(d, class)
 names(d)
 ```
 
-## Step 1
+#### Step 1
 
 #### Creating new variables
 
-#### **1) BSD** (body size dimorphism) - Ratio of average male to female body mass.
+#### **1) BSD (body size dimorphism) - Ratio of average male to female body mass.**
 
-#### **2) sex_ratio** - Ratio of the number of adult females to adult males in a typical group.
+#### **2) sex_ratio - Ratio of the number of adult females to adult males in a typical group.**
 
-#### **3) DI** (for “defensibility index”) - Ratio of day range length to the diameter of the home range.
+#### **3) DI (for “defensibility index”) - Ratio of day range length to the diameter of the home range.**
 
 ```{r}
 #BSD (body size dimorphism) - Ratio of average male to female body mass
@@ -65,7 +63,7 @@ d$sex_ratio
 
 ```
 
-We need a calculation here, to get the diameter of the home range to be derived from HomeRange_km2 in order to get the new variable "DI-defensibility index"
+We need a calculation here, to get the diameter of the home range to be derived from HomeRange_km2 in order to get the new variable "DI (defensibility index)"
 
 ```{r}
 d$HomeRange_diameter <- 2 * sqrt(d$HomeRange_km2 / pi)
@@ -85,120 +83,192 @@ which(is.infinite(d$sex_ratio))
 which(is.infinite(d$DI))
 ```
 
-There is no any instances as INF.
+There is no any instances as INF. So there are no divisions by zero and the numerator N/A values will produce a N/A value for new variable as well naturally.
 
-#### 4) Relationship between day range length and time spent moving
+#### 4) Plotting the relationship between day range length and time spent moving
 
-First trying out **ggplot2** to visualize this relationship.
+First trying out ggplot2 to visualize this relationship.
 
-The reason for choosing **ggplot2** for this plot is we can use faceting by family to generate one plot per family. So our comparison will be easy.Using a scatterplot because both are continuous variables,
+The reason for choosing ggplot2 for this plot is we can use faceting by family to generate one plot per family. So our comparison between families would be easy.Using a scatterplot because both are continuous variables,
 
-Explaining the layers and inside parameters used : aesthetics layer - Mapping given variables to x and y axis, to customize the plot..geometry layer - 0.5 opacity points, color=black, size=4 and a smooth line to show where all points are lying generally. Using labs() to set the x- and y-axis labels.
+**Explaining the layers and parameters used :**
+
+1\) Aesthetics layer - Mapping given variables to X (Time spent moving) and Y (Day range length) axis,
+
+2\) Geometry layers - To customize the plot, defining alpha= 0.5 (opacity of the points), color=black, size=4 , na.rm =TRUE to drop rows with missing values for the plotted variables. Opasity is set at 0.5 to see overlapping points.
+
+3\) geom_smooth() to show where the trend of all points are lying generally.
+
+3\) Using labs() to set the X- and Y-axis labels.
 
 ```{r}
 library(ggplot2)
 
-# Overall plot (all species)
+# Overall plot (representing all species)
 
-ggplot(d, aes(x = Move, y = DayLength_km)) +
-  geom_point(alpha=0.5,color="black",size=4, na.rm = TRUE) + geom_smooth(method = lm)+labs(x="Tiem spent moving", y="Day range length")
+p<-ggplot(d, aes(x = Move, y = DayLength_km))
+p<-p+ geom_point(alpha=0.5,color="black",size=4, na.rm = TRUE)
+p<-p+ geom_smooth(method = lm, se = FALSE)
+p<-p+labs(x="Time spent moving", y="Day range length")
+p
 ```
 
-Should we use log values to plot? How to decide??
+**Should we transform values?**
 
-Since the values seems to be more towards a corner , let's use log values to plot
+The above plotted values seems to be skewed to right. Therefore, we can use log values of the variables for the plot. If we convert the values to log values, the minus(-) values for day range length variable will indicate the values between 0 and 1.
 
 ```{r}
-# Overall plot (all species)
+# Overall plot (representing all species) - Now using log() values
 
-ggplot(d, aes(x =log(Move), y = log(DayLength_km))) +
-  geom_point(alpha=0.5,color="black",size=4, na.rm = TRUE) + geom_smooth(method = lm)+labs(x="Tiem spent moving", y="Day range length")
-
+d<-d[ is.finite(log(d$Move)) & is.finite(log(d$DayLength_km)), ] # Removing invalid values after log convrersion
+p<-ggplot(d, aes(x = log(Move), y = log(DayLength_km)))
+p<-p+ geom_point(alpha=0.5,color="black",size=4, na.rm = TRUE)
+p<-p+ geom_smooth(method = lm, se = FALSE)
+p<-p+labs(x="log(Time spent moving)", y="log(Day range length)")
+p
 ```
 
 #### By family comparison
 
-1\) Approach 1: First using the color aesthetic inside geom_point() to show different families.Defining it inside the geometry layer does not affect other layers.
+1\) **Approach 1**: First using the aesthetic mapping inside geom_point() to show different families.Defining it inside the geometry layer does not affect other layers.
 
 ```{r}
-library(ggplot2)
 
-# plot all species in one plotwith dfferent color for each
+# Plotting all species in one plot with dfferent color for each
 
-ggplot(d, aes(x = log(Move), y = log(DayLength_km))) +
-  geom_point(alpha=0.5, aes(color=Family),na.rm = TRUE)+geom_smooth(method=lm)+labs(x="Tiem spent moving", y="Day range length")
+d<-d[ is.finite(log(d$Move)) & is.finite(log(d$DayLength_km)), ] # Removing invalid values after log convrersion
+p<-ggplot(d, aes(x = log(Move), y = log(DayLength_km)))
+p<-p+ geom_point(alpha=0.5,aes(color=Family),size=4, na.rm = TRUE)
+p<-p+ geom_smooth(method = lm, se = FALSE)
+p<-p+labs(x="log(Time spent moving)", y="log(Day range length)")
+p
 ```
 
-2\) Approach 2- Now, we are using facet_wrap() layer in ggplot2 to visualize families in a separate plot
+2\) **Approach 2**- Now, we are using facet_wrap() layer in ggplot2 to visualize families in a separate plot
 
 ```{r}
-ggplot(d, aes(x = Move, y = DayLength_km)) +
-  geom_point(aes(color = Family), na.rm = TRUE)  +
-  facet_wrap(~ Family)+labs(
-    x = "Time spent moving",
-    y = "Day range length (km)"
-  )+labs(x="Tiem spent moving", y="Day range length")
+# Using a separate plot t represent one family
+
+d<-d[ is.finite(log(d$Move)) & is.finite(log(d$DayLength_km)), ] # Removing invalid values after log convrersion
+p<-ggplot(d, aes(x = log(Move), y = log(DayLength_km)))
+p<-p+ geom_point(alpha=0.5,aes(color=Family),size=2, na.rm = TRUE)
+p<-p+ geom_smooth(method = lm, se = FALSE)
+p<-p+ facet_wrap(~ Family)
+p<-p+labs(x="log(Time spent moving)", y="log(Day range length)")
+p
 ```
 
-Do species that spend more time moving travel farther overall? How about within any particular primate family?
+This approach is good for identifying patterns separate for each family.
 
-Should you transform either of these variables? Why or why not?
+**Do species that spend more time moving travel farther overall? How about within any particular primate family?**
 
-Should we use log values to plot? How to decide??
+-   Looking at above plots, we can say that the relationship between x and y variables are not very strong. But, considering overall the slope of the line upwards tell us that species spend more time moving likely to have longer day range lengths.
 
-Since the values seems to be more towards a corner , let's use log values to plot
+-   Above overall conclusion varies slightly if we consider families separately. Cercopithecidae and Atelidae show a considerable good positive relationship, from which we can tell that the species spend more time moving generally travel farther within a day.
 
-#### 5) relationship between day range length and group size 
+-   Cebidae and Hylobatidae also show a positive trend, but we cannot say exactly it is a positive relationship because they have very small sample sizes. similar observation with Indriidae.
 
-```{r}
-# Overall plot (all species)
-ggplot(d, aes(x = MeanGroupSize, y = DayLength_km)) +
-  geom_point(na.rm = TRUE) +
-  geom_smooth(method = "lm", se = FALSE, na.rm = TRUE)
-```
+-   Lemuridae shows a flat relationship while only Hominidae shows a negative relationship which tells us that the time they spent moving is less allocated to move farther away or the time they spent moving is not necessarily for travelling farther away respectively.
 
-```{r}
-ggplot(d, aes(x = MeanGroupSize, y = DayLength_km)) +
-  geom_point(aes(color = Family),na.rm = TRUE)  +
-  facet_wrap(~ Family)
-```
+#### 5) Plotting the relationship between day range length and group size
 
-Do species that live in larger groups travel farther, overall, in a day? How about within any particular primate family? Should you transform either of these variables?
-
-#### 6) relationship between canine size dimorphism (y axis) and body size dimorphism (x axis)
+Applying same considerations applied for above plot. We can transform these variables into log values to avoid the skewness of data points in the plot and to get a clear wide spread visualization.
 
 ```{r}
 # Overall plot (all species)
-ggplot(d, aes(x = BSD, y = Canine_Dimorphism)) +
-  geom_point(na.rm = TRUE) +
-  geom_smooth(method = "lm", se = FALSE, na.rm = TRUE)
+
+d<-d[ is.finite(log(d$MeanGroupSize)) & is.finite(log(d$DayLength_km)), ] # Removing invalid values after log convrersion
+p<-ggplot(d, aes(x = log(MeanGroupSize), y = log(DayLength_km)))
+p<-p+ geom_point(alpha=0.5,color="black",size=4, na.rm = TRUE)
+p<-p+ geom_smooth(method = lm, se = FALSE)
+p<-p+labs(x="log(Mean Group Size)", y="log(Day range length)")
+p
 ```
 
 ```{r}
-ggplot(d, aes(x = BSD, y = Canine_Dimorphism)) +
-  geom_point(aes(color = Family),na.rm = TRUE)  +
-  facet_wrap(~ Family)
+
+# Using a separate plot t represent one family
+
+d<-d[ is.finite(log(d$MeanGroupSize)) & is.finite(log(d$DayLength_km)), ] # Removing invalid values after log convrersion
+p<-ggplot(d, aes(x = log(MeanGroupSize), y = log(DayLength_km)))
+p<-p+ geom_point(alpha=0.5,aes(color=Family),size=2, na.rm = TRUE)
+p<-p+ geom_smooth(method = lm, se = FALSE)
+p<-p+ facet_wrap(~ Family)
+p<-p+labs(x="log(Mean Group Size)", y="log(Day range length)")
+p
+
+unique(d$Family)
+unique(d$Species)
 ```
 
-Do taxa with greater size dimorphism also show greater canine dimorphism?
+**Do species that live in larger groups travel farther, overall, in a day? How about within any particular primate family?**
 
-#### 7) Create a new variable named **diet_strategy** that is “frugivore” if fruits make up \>50% of the diet, “folivore” if leaves make up \>50% of the diet, and “omnivore” if diet data are available but neither of these is true (i.e., these values are not `NA`). Then, create boxplots of group size for species with different dietary strategies, omitting the category `NA` from your plot. Do frugivores live in larger groups than folivores?
+-   Overall there is a positive relationship between group size and day range length. This tells us that who is living in larger groups tend to travel farther per day.
+
+-   When looking at the relationship within individual primate families, the pattern is not so consistant.
+
+-   Cercopithecidae show a clear positive relationship telling us that species with larger group sizes tend to have longer day ranges even within the family.
+
+-   Atelidae and Hominidae also shows a positive trend, but these have very few data points. Therefore, hard to exactly predict this.
+
+-   Lemuridae show a weak and nearly flat relationship, indicating little change in day range length with increasing group size.
+
+-   Hylobatidae and Indriidae again have very limited data points, making it difficult to infer any reliable within-family relationship.
+
+#### 6) Plotting the relationship between canine size dimorphism (y axis) and body size dimorphism (x axis)
+
+```{r}
+# Overall plot (all species)
+
+d<-d[ is.finite(log(d$BSD)) & is.finite(log(d$Canine_Dimorphism)), ] # Removing invalid values after log convrersion
+p<-ggplot(d, aes(x = log(BSD), y = log(Canine_Dimorphism)))
+p<-p+ geom_point(alpha=0.5,color="black",size=4, na.rm = TRUE)
+p<-p+ geom_smooth(method = lm, se = FALSE)
+p<-p+labs(x="log(body size dimorphism)", y="log(canine size dimorphism)")
+p
+```
+
+```{r}
+# Using a separate plot t represent one family
+
+d<-d[ is.finite(log(d$ BSD)) & is.finite(log(d$Canine_Dimorphism)), ] # Removing invalid values after log convrersion
+p<-ggplot(d, aes(x = log(BSD), y = log(Canine_Dimorphism)))
+p<-p+ geom_point(alpha=0.5,aes(color=Family),size=2, na.rm = TRUE)
+p<-p+ geom_smooth(method = lm, se = FALSE)
+p<-p+ facet_wrap(~ Family)
+p<-p+labs(x="log(BSD)", y="log(Canine_Dimorphism)")
+p
+
+unique(d$Family)
+unique(d$Species)
+```
+
+**Do taxa with greater size dimorphism also show greater canine dimorphism?**
+
+-   Overall, we can see a positive relationship between body size dimorphism and canine dimorphism because the trending line's slope is upward.
+
+-   if we consider species within primate families, Cercopithecidae show a clear positive trend which tells us that species with higher body size dimorphism also tend to have higher canine dimorphism.
+
+-   Hominidae show a weak positive trend, also Atelidae and Lemuridae show little to no clear relationship within the family.
+
+-   One common limitations to above data visualizations is there are limited data points for some families which makes it harder to interpret a relationship between two variables accurately.
+
+#### 7) Creating a new variable named **diet_strategy** 
+
+( “frugivore” if fruits make up \>50% of the diet, “folivore” if leaves make up \>50% of the diet, and “omnivore” if diet data are available but neither of these is true (i.e., these values are not `NA`))
 
 ```{r}
 # Creating a new variable named "diet_strategy"
-
-
+# Using mutate function to add the new column
 
 d1<-mutate(d, diet_strategy = ifelse(Fruit >= 50, "frugivore", ifelse(Leaves >= 50, "folivore",
     ifelse(Fruit < 50 & Leaves < 50 & !is.na(Fruit) & !is.na(Leaves), "omnivore", NA))))
 
-
-
+# viewing the created column
 d1$diet_strategy
 ```
 
 ```{r}
-
 
 # we need to remove the rows from the dataset where the diet_strategy is N/A for this
 # Using subsetting
@@ -209,18 +279,20 @@ d2
 
 ```
 
+#### Creating boxplots of group size for species with different dietary strategies, omitting the category `NA`
+
 ```{r}
 # Creating boxplots of group size for species with different dietary strategies
 # diet_strategy should be the x axis.
 
-
-ggplot(data = d2, aes(x = diet_strategy, y = MeanGroupSize))+ 
-  geom_boxplot(na.rm = TRUE) + 
-  theme(axis.text.x = element_text(angle = 90))+ 
-  labs(x= "diet_strategy", y="Group Size (MeanGroupSize)")
-
-
+p<- ggplot(data = d2, aes(x = diet_strategy, y = MeanGroupSize))
+p<- p+ geom_boxplot(na.rm = TRUE)
+p<-p+ theme(axis.text.x = element_text(angle = 90)) 
+p<-p+ labs(x= "diet_strategy", y="Group Size (MeanGroupSize)")
+p
 
 ```
 
-Do frugivores live in larger groups than folivores?
+**Do frugivores live in larger groups than folivores?**
+
+Looking at the median lines of the boxplots of two categories, folivores have a slightly higher median line. This tells us that on average, folivore species live in somewhat larger groups than frugivores. But, the plot also tells us that frugivores have some very large group sized species as well because of the strong upper outliers. The largest group size of folivores are not that high as frugivores. We can also tell that the variability of group sizes in frugivores us higher then folivores too looking at the boxes.
